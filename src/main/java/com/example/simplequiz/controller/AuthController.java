@@ -1,0 +1,120 @@
+package com.example.simplequiz.controller;
+
+import com.example.simplequiz.dto.LoginRequest;
+import com.example.simplequiz.dto.SignUpRequest;
+import com.example.simplequiz.dto.VerifyRequest;
+import com.example.simplequiz.exception.AlreadyFoundException;
+import com.example.simplequiz.exception.NotFoundException;
+import com.example.simplequiz.exception.ServerException;
+import com.example.simplequiz.service.UserService;
+import jakarta.validation.Valid;
+import org.antlr.v4.runtime.InputMismatchException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RequestMapping("/api/auth")
+@RestController
+public class AuthController {
+
+
+    private final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
+    private final UserService userService;
+
+    public AuthController(UserService userService){
+
+        this.userService = userService;
+
+    }
+
+    //login api
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest loginRequest){
+
+        try {
+
+            //login function
+            logger.info("Performing login function");
+            //login function frm UserService class
+            String token = userService.login(loginRequest);
+
+            ResponseCookie jwtCookie = ResponseCookie.from("jwt", token)
+                    .httpOnly(true)
+                    .secure(false)
+                    .path("/")
+                    .maxAge(24 * 60 * 60)
+                    .sameSite("Lax")
+                    .build();
+            logger.info("Successfully logged");
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                    .body("Login Successful");
+
+        }catch(DisabledException ex){
+            logger.error("Your account has disabled ");
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
+        } catch(BadCredentialsException ex){
+            logger.error("Invalid credentials");
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        } catch(Exception ex){
+            logger.error("Something went wrong with the server",ex);
+            return new ResponseEntity<>(HttpStatus
+                    .INTERNAL_SERVER_ERROR);
+        }
+
+
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<Void> signup(@RequestBody SignUpRequest signUpRequest){
+        try{
+
+            userService.signup(signUpRequest);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }catch(ServerException serverException){
+            logger.error("something went wrong with the server");
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (AlreadyFoundException e) {
+            logger.error("User already exist");
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<Void> verifyOpt(@RequestBody VerifyRequest verifyRequest){
+        try{
+
+            userService.Verify(verifyRequest.getEmail(), verifyRequest.getOtp());
+            return new ResponseEntity<>(HttpStatus.OK);
+
+        }catch(NotFoundException notFoundException){
+            logger.error("User expired",notFoundException);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        }catch(InputMismatchException inputMismatchException){
+            logger.error("Invalid code",inputMismatchException);
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }catch(Exception exception){
+            logger.error("Something went wrong with the server",exception);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+
+
+
+}
