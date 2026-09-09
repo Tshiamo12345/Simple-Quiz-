@@ -1,5 +1,6 @@
 package com.example.simplequiz.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class QUIZ {
+public class Quiz {
 
 
     @Id
@@ -33,7 +34,7 @@ public class QUIZ {
         this.questions = questions;
     }
 
-    public QUIZ() {
+    public Quiz() {
     }
 
     public String getId() {
