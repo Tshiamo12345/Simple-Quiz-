@@ -2,6 +2,8 @@ package com.example.simplequiz.model;
 
 import jakarta.persistence.*;
 
+
+@Entity
 public class Answer {
 
 
