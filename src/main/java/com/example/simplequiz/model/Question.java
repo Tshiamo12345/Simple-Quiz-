@@ -33,6 +33,11 @@ public class Question {
     @Column(nullable = false)
     private String correctAnswer;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quiz_id")
+    private QUIZ quiz;
+
+
     public Question() {
     }
 
