@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -38,7 +39,31 @@ public class User {
 
     @OneToMany(mappedBy = "author",cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<QUIZ> quizzes;
+    private List<Quiz> quizzes;
+
+    @OneToMany(mappedBy = "user" , cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<QuizAttempt> quizAttempts = new ArrayList<>();
+
+    public void setQuizzes(List<Quiz> quizzes) {
+        this.quizzes = quizzes;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public List<QuizAttempt> getQuizAttempts() {
+        return quizAttempts;
+    }
+
+    public void setQuizAttempts(List<QuizAttempt> quizAttempts) {
+        this.quizAttempts = quizAttempts;
+    }
 
     public User(String userId, String username, String email, String role, String password) {
         this.userId = userId;
@@ -66,7 +91,7 @@ public class User {
         return createdAt;
     }
 
-    public List<QUIZ> getQuizzes() {
+    public List<Quiz> getQuizzes() {
         return quizzes;
     }
 
