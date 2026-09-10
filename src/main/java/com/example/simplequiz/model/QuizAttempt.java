@@ -15,6 +15,8 @@ public class QuizAttempt {
     @JoinColumn(name = "user_Id",nullable = false)
     private User user;
 
+    private String status;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id",nullable = false)
     private Quiz quiz;
@@ -80,6 +82,14 @@ public class QuizAttempt {
 
     public Double getScore() {
         return score;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public void setScore(Double score) {
