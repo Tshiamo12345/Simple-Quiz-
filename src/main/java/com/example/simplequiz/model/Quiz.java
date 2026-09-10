@@ -20,6 +20,10 @@ public class Quiz {
     @NotNull
     private String title;
 
+    @NotNull
+    @NotBlank
+    private String description;
+
     @ManyToOne
     @JoinColumn(name = "author_id")   // foreign key column in the quiz table
     private User author;
@@ -35,6 +39,14 @@ public class Quiz {
     }
 
     public Quiz() {
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getId() {
