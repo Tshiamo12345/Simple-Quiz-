@@ -7,5 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface QuizAttemptRepo extends JpaRepository<QuizAttempt,String> {
 
+    boolean existsByUserUsernameAndQuizId(String username , String quizId);
 
 }

@@ -10,8 +10,18 @@ public class QuizRequest {
 
     private String author;
 
+    private boolean isTaken;
+
     public String getAuthor() {
         return author;
+    }
+
+    public boolean isTaken() {
+        return isTaken;
+    }
+
+    public void setTaken(boolean taken) {
+        isTaken = taken;
     }
 
     public void setAuthor(String author) {
