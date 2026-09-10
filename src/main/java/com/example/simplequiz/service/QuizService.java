@@ -50,6 +50,7 @@ public class QuizService {
 
             //iteration
             for(Quiz quiz : quizzes){
+
                 int numberOfQuestions = (int)questionRepo.countByQuizId(quiz.getId());
                 boolean isTaken = quizAttemptRepo.existsByUserUsernameAndQuizId(user.getUsername(),quiz.getId());
                 quizRequest = new QuizRequest();
@@ -57,6 +58,7 @@ public class QuizService {
                 quizRequest.setTaken(isTaken);
                 quizRequest.setNumberOfQuestions(numberOfQuestions);
                 quizRequest.setId(quiz.getId());
+                quizRequest.setAuthor(quiz.getAuthor().getUsername());
                 quizRequestList.add(quizRequest);
 
             }
