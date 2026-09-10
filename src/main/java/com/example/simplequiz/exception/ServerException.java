@@ -1,7 +1,11 @@
 package com.example.simplequiz.exception;
 
 public class ServerException extends RuntimeException {
-    public ServerException(String message) {
+    public ServerException(String message, Exception e) {
+        super(message);
+    }
+
+    public ServerException(String message){
         super(message);
     }
 }

@@ -5,6 +5,7 @@ import com.example.simplequiz.exception.NotFoundException;
 import com.example.simplequiz.exception.ServerException;
 import com.example.simplequiz.model.Quiz;
 import com.example.simplequiz.model.User;
+import com.example.simplequiz.repository.QuestionRepo;
 import com.example.simplequiz.repository.QuizAttemptRepo;
 import com.example.simplequiz.repository.QuizRepo;
 import com.example.simplequiz.repository.UserRepo;
@@ -26,11 +27,13 @@ public class QuizService {
     private final QuizRepo quizRepo;
     private final UserRepo userRepo;
     private final QuizAttemptRepo quizAttemptRepo;
+    private final QuestionRepo questionRepo;
 
-    public QuizService(QuizRepo quizRepo,UserRepo userRepo, QuizAttemptRepo quizAttemptRepo){
+    public QuizService(QuizRepo quizRepo,UserRepo userRepo, QuizAttemptRepo quizAttemptRepo,QuestionRepo questionRepo){
         this.quizRepo = quizRepo;
         this.userRepo = userRepo;
         this.quizAttemptRepo = quizAttemptRepo;
+        this.questionRepo = questionRepo;
     }
 
     @Transactional(readOnly = true)
@@ -47,10 +50,13 @@ public class QuizService {
 
             //iteration
             for(Quiz quiz : quizzes){
+                int numberOfQuestions = (int)questionRepo.countByQuizId(quiz.getId());
                 boolean isTaken = quizAttemptRepo.existsByUserUsernameAndQuizId(user.getUsername(),quiz.getId());
                 quizRequest = new QuizRequest();
                 quizRequest.setTitle(quiz.getTitle());
                 quizRequest.setTaken(isTaken);
+                quizRequest.setNumberOfQuestions(numberOfQuestions);
+                quizRequest.setId(quiz.getId());
                 quizRequestList.add(quizRequest);
 
             }
