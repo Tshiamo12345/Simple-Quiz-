@@ -22,6 +22,8 @@ public class Answer {
     @Column(nullable = false)
     private String selectedOption;
 
+    private String correctAnswer;
+
     private Boolean isCorrect;
 
     public Answer() {
@@ -29,6 +31,14 @@ public class Answer {
 
     public String getId() {
         return id;
+    }
+
+    public String getCorrectAnswer() {
+        return correctAnswer;
+    }
+
+    public void setCorrectAnswer(String correctAnswer) {
+        this.correctAnswer = correctAnswer;
     }
 
     public void setId(String id) {

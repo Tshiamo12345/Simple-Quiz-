@@ -1,11 +1,11 @@
 package com.example.simplequiz.service;
 
-import com.example.simplequiz.dto.QuizQuestionsRequest;
-import com.example.simplequiz.dto.QuizRequest;
+import com.example.simplequiz.dto.*;
 import com.example.simplequiz.exception.NotFoundException;
 import com.example.simplequiz.exception.ServerException;
 import com.example.simplequiz.model.Question;
 import com.example.simplequiz.model.Quiz;
+import com.example.simplequiz.model.QuizAttempt;
 import com.example.simplequiz.model.User;
 import com.example.simplequiz.repository.QuestionRepo;
 import com.example.simplequiz.repository.QuizAttemptRepo;
@@ -16,9 +16,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizService {
@@ -98,7 +102,7 @@ public class QuizService {
                 quizQuestionsRequest.setQuestionId(question.getQuestionId());
                 quizQuestionsRequest.setQuestionText(question.getQuestionText());
                 quizQuestionsRequest.setOptionA(question.getOptionA());
-                quizQuestionsRequest.setOptionB(question.getQuestionText());
+                quizQuestionsRequest.setOptionB(question.getOptionB());
                 quizQuestionsRequest.setOptionC(question.getOptionC());
                 quizQuestionsRequests.add(quizQuestionsRequest);
             }
@@ -108,5 +112,53 @@ public class QuizService {
             throw new ServerException("Something went wrong with the server");
         }
 
+    }
+
+    @Transactional
+    public QuizResultResponse gradeQuiz(UserDetails userDetails, String quizId, SubmitAnswerRequest submission) {
+
+        User user = findUserByUserDetails(userDetails);
+
+        List<Question> questions = questionRepo.findByQuizId(quizId);
+        if(questions.isEmpty()){
+
+            throw new NotFoundException("No questions for quiz "+ quizId);
+        }
+
+        Map<String, String> answersByQuestionId = submission.getAnswers().stream()
+                .filter(a -> a.getQuestionId() != null && a.getChosenAnswer() != null)
+                .collect(Collectors.toMap(
+                        AnswerRequestDTO::getQuestionId,
+                        AnswerRequestDTO::getChosenAnswer,
+                        (a, b) -> b   // last-wins on duplicate questionId
+                ));
+        int correct = 0;
+
+        List<QuizResultResponse.QuestionResult> details = new ArrayList<>();
+
+        for(Question q : questions){
+            String chosen = answersByQuestionId.get(q.getQuestionId());
+            boolean isCorrect = chosen != null && chosen.equalsIgnoreCase(q.getCorrectAnswer());
+            if(isCorrect) correct++;
+
+            details.add(new QuizResultResponse.QuestionResult(q.getQuestionId(),chosen,q.getCorrectAnswer(),isCorrect));
+
+        }
+
+        int total = questions.size();
+        int score = (int) Math.round((correct * 100.0)/ total);
+
+        QuizAttempt quizAttempt = new QuizAttempt();
+        Optional<Quiz>  optionalQuiz  = quizRepo.findById(quizId);
+        if(optionalQuiz.isEmpty()){
+            throw new NotFoundException("Quiz not found with id "+ quizId);
+        }
+        quizAttempt.setQuiz(optionalQuiz.get());
+        quizAttempt.setEndTime(LocalDateTime.now());
+        quizAttempt.setScore((double) score);
+        quizAttempt.setUser(user);
+        quizAttemptRepo.save(quizAttempt);
+
+        return new QuizResultResponse(total,correct,score,details);
     }
 }
