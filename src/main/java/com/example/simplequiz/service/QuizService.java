@@ -1,8 +1,10 @@
 package com.example.simplequiz.service;
 
+import com.example.simplequiz.dto.QuizQuestionsRequest;
 import com.example.simplequiz.dto.QuizRequest;
 import com.example.simplequiz.exception.NotFoundException;
 import com.example.simplequiz.exception.ServerException;
+import com.example.simplequiz.model.Question;
 import com.example.simplequiz.model.Quiz;
 import com.example.simplequiz.model.User;
 import com.example.simplequiz.repository.QuestionRepo;
@@ -14,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +38,7 @@ public class QuizService {
     }
 
     @Transactional(readOnly = true)
-    public List<QuizRequest> getAllQuizzies(UserDetails userDetails){
+    public List<QuizRequest> getAllQuizzes(UserDetails userDetails){
 
         try{
             //declaration
@@ -66,8 +67,8 @@ public class QuizService {
             return quizRequestList;
 
         }catch(Exception e){
-            logger.error("Something went with the server ");
-            throw new ServerException("Something went wrong with the server ",e);
+            logger.error("Something went with the server ",e);
+            throw new ServerException("Something went wrong with the server ");
 
         }
     }
@@ -81,4 +82,31 @@ public class QuizService {
         return userOptional.get();
     }
 
+    public List<QuizQuestionsRequest> getAllQuizQuestions(UserDetails userDetails, String quizId)throws NotFoundException {
+
+        List<QuizQuestionsRequest> quizQuestionsRequests;
+        try{
+            logger.info("Preparing to get all questions {}",QuizService.class);
+            //checking if user exist by token
+            User user = findUserByUserDetails(userDetails);
+            // returning questions by quiz
+            List<Question> questions = questionRepo.findByQuizId(quizId);
+            quizQuestionsRequests = new ArrayList<>();
+            for(Question question: questions){
+
+                QuizQuestionsRequest quizQuestionsRequest = new QuizQuestionsRequest();
+                quizQuestionsRequest.setQuestionId(question.getQuestionId());
+                quizQuestionsRequest.setQuestionText(question.getQuestionText());
+                quizQuestionsRequest.setOptionA(question.getOptionA());
+                quizQuestionsRequest.setOptionB(question.getQuestionText());
+                quizQuestionsRequest.setOptionC(question.getOptionC());
+                quizQuestionsRequests.add(quizQuestionsRequest);
+            }
+        return quizQuestionsRequests;
+        }catch(ServerException serverException){
+            logger.error("Something went wrong with the server ",serverException);
+            throw new ServerException("Something went wrong with the server");
+        }
+
+    }
 }

@@ -1,16 +1,17 @@
 package com.example.simplequiz.controller;
 
 
+import com.example.simplequiz.dto.QuizQuestionsRequest;
 import com.example.simplequiz.dto.QuizRequest;
-import com.example.simplequiz.exception.ServerException;
+import com.example.simplequiz.model.Question;
 import com.example.simplequiz.service.QuizService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,23 +25,21 @@ public class QuizController {
 
     private final Logger logger = LoggerFactory.getLogger(QuizController.class);
 
-    public QuizController(QuizService quizService){
-
+    public QuizController(QuizService quizService) {
         this.quizService = quizService;
     }
 
-
     @GetMapping
-    public ResponseEntity<List<QuizRequest>> getQuizzies(@AuthenticationPrincipal UserDetails userDetails){
-
-        try{
-
-            List<QuizRequest> quizRequestList = quizService.getAllQuizzies(userDetails);
-            return new ResponseEntity<>(quizRequestList,HttpStatus.OK);
-        }catch(ServerException ex){
-            logger.error("Something went wrong with the server ",ex);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<List<QuizRequest>> getQuizzes(@AuthenticationPrincipal UserDetails userDetails) {
+        List<QuizRequest> quizRequestList = quizService.getAllQuizzes(userDetails);
+        return ResponseEntity.ok(quizRequestList);
     }
+
+    @GetMapping("/start/{quizId}")
+    public ResponseEntity<List<QuizQuestionsRequest>> getAllQuizQuestions(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String quizId) {
+        List<QuizQuestionsRequest> questionList = quizService.getAllQuizQuestions(userDetails, quizId);
+        return ResponseEntity.ok(questionList);
+    }
+
 
 }
