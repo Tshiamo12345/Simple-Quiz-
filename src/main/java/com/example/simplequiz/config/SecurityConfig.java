@@ -42,7 +42,10 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/images/**",      // <-- IMAGES
                                 "/ws/**",              // <-- WEBSOCKET
-                                "/error"
+                                "/error",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
                         ).permitAll()
                         // ❗ Everything else requires authentication (profile, friends, etc.)
                         .anyRequest().authenticated()
