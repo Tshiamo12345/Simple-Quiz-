@@ -12,6 +12,8 @@ public class QuizRequest {
 
     private boolean isTaken;
 
+    private String description;
+
     public String getAuthor() {
         return author;
     }
@@ -20,6 +22,12 @@ public class QuizRequest {
         return isTaken;
     }
 
+    public void setDescription(String description){
+        this.description = description;
+    }
+    public String getDescription(){
+        return description;
+    }
     public void setTaken(boolean taken) {
         isTaken = taken;
     }

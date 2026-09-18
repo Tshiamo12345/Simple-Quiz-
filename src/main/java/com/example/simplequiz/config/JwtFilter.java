@@ -34,7 +34,13 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         System.out.println("🔍 JwtFilter: processing " + request.getRequestURI());
-
+        String path = request.getRequestURI();
+        if (path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.equals("/error")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         // 1️⃣ Read cookie
         String token = null;
         Cookie[] cookies = request.getCookies();
