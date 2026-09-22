@@ -17,10 +17,10 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RequestMapping("/api/auth")
 @RestController
@@ -75,6 +75,17 @@ public class AuthController {
         }
 
 
+    }
+    @GetMapping("/me")
+    public ResponseEntity<?> me(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        // Return whatever info the frontend needs about the current user
+        return ResponseEntity.ok(Map.of(
+                "username", authentication.getName(),
+                "authorities", authentication.getAuthorities()
+        ));
     }
 
     @PostMapping("/signup")
