@@ -39,13 +39,9 @@ public class AuthController {
 
     //login api
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest loginRequest){
-
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest loginRequest) {
         try {
-
-            //login function
             logger.info("Performing login function");
-            //login function frm UserService class
             String token = userService.login(loginRequest);
 
             ResponseCookie jwtCookie = ResponseCookie.from("jwt", token)
@@ -55,26 +51,27 @@ public class AuthController {
                     .maxAge(24 * 60 * 60)
                     .sameSite("Lax")
                     .build();
-            logger.info("Successfully logged");
 
+            logger.info("Successfully logged");
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                    .body("Login Successful");
+                    .body(Map.of("username", loginRequest.getUsername()));
 
-        }catch(DisabledException ex){
-            logger.error("Your account has disabled ");
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        } catch (DisabledException ex) {
+            logger.error("Your account has disabled");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("status", 403, "message", "Your account is disabled."));
 
-        } catch(BadCredentialsException ex){
+        } catch (BadCredentialsException ex) {
             logger.error("Invalid credentials");
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        } catch(Exception ex){
-            logger.error("Something went wrong with the server",ex);
-            return new ResponseEntity<>(HttpStatus
-                    .INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("status", 401, "message", "Invalid username or password."));
+
+        } catch (Exception ex) {
+            logger.error("Something went wrong with the server", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", 500, "message", "Something went wrong. Please try again."));
         }
-
-
     }
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication authentication) {
