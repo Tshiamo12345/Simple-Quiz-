@@ -137,13 +137,37 @@ public class QuizService {
 
         List<QuizResultResponse.QuestionResult> details = new ArrayList<>();
 
-        for(Question q : questions){
+        for (Question q : questions) {
             String chosen = answersByQuestionId.get(q.getQuestionId());
-            boolean isCorrect = chosen != null && chosen.equalsIgnoreCase(q.getCorrectAnswer());
-            if(isCorrect) correct++;
 
-            details.add(new QuizResultResponse.QuestionResult(q.getQuestionId(),chosen,q.getCorrectAnswer(),isCorrect));
+            // DB stores the letter ("a"/"b"/"c"), not the text — resolve it to the option text
+            String correctLetter = q.getCorrectAnswer() == null
+                    ? ""
+                    : q.getCorrectAnswer().trim().toLowerCase();
 
+            String correctText = switch (correctLetter) {
+                case "a" -> q.getOptionA();
+                case "b" -> q.getOptionB();
+                case "c" -> q.getOptionC();
+                default -> null;
+            };
+
+            // Trim both sides to survive accidental whitespace
+            String chosenTrimmed = chosen == null ? null : chosen.trim();
+            String correctTrimmed = correctText == null ? null : correctText.trim();
+
+            boolean isCorrect = chosenTrimmed != null
+                    && correctTrimmed != null
+                    && chosenTrimmed.equalsIgnoreCase(correctTrimmed);
+
+            if (isCorrect) correct++;
+
+            details.add(new QuizResultResponse.QuestionResult(
+                    q.getQuestionId(),
+                    chosen,                 // still return the text the user picked
+                    correctText,            // return the TEXT — the frontend compares to option text
+                    isCorrect
+            ));
         }
 
         int total = questions.size();
