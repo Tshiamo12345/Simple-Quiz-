@@ -124,5 +124,20 @@ public class AuthController {
 
 
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        logger.info("Performing logout function");
 
+        ResponseCookie clearCookie = ResponseCookie.from("jwt", "")
+                .httpOnly(true)
+                .secure(false)          // must match the cookie set at login
+                .path("/")
+                .maxAge(0)              // expires immediately
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
+                .build();
+    }
 }
