@@ -34,7 +34,7 @@ public class QuizService {
     private final QuizAttemptRepo quizAttemptRepo;
     private final QuestionRepo questionRepo;
 
-    public QuizService(QuizRepo quizRepo,UserRepo userRepo, QuizAttemptRepo quizAttemptRepo,QuestionRepo questionRepo){
+    public QuizService(QuizRepo quizRepo, UserRepo userRepo, QuizAttemptRepo quizAttemptRepo, QuestionRepo questionRepo) {
         this.quizRepo = quizRepo;
         this.userRepo = userRepo;
         this.quizAttemptRepo = quizAttemptRepo;
@@ -42,11 +42,11 @@ public class QuizService {
     }
 
     @Transactional(readOnly = true)
-    public List<QuizRequest> getAllQuizzes(UserDetails userDetails){
+    public List<QuizRequest> getAllQuizzes(UserDetails userDetails) {
 
-        try{
+        try {
             //declaration
-            List<Quiz> quizzes  = quizRepo.findAll();
+            List<Quiz> quizzes = quizRepo.findAll();
             List<QuizRequest> quizRequestList = new ArrayList<>();
             QuizRequest quizRequest;
 
@@ -54,10 +54,10 @@ public class QuizService {
             User user = findUserByUserDetails(userDetails);
 
             //iteration
-            for(Quiz quiz : quizzes){
+            for (Quiz quiz : quizzes) {
 
-                int numberOfQuestions = (int)questionRepo.countByQuizId(quiz.getId());
-                boolean isTaken = quizAttemptRepo.existsByUserUsernameAndQuizId(user.getUsername(),quiz.getId());
+                int numberOfQuestions = (int) questionRepo.countByQuizId(quiz.getId());
+                boolean isTaken = quizAttemptRepo.existsByUserUsernameAndQuizId(user.getUsername(), quiz.getId());
                 quizRequest = new QuizRequest();
                 quizRequest.setTitle(quiz.getTitle());
                 quizRequest.setTaken(isTaken);
@@ -71,33 +71,33 @@ public class QuizService {
 
             return quizRequestList;
 
-        }catch(Exception e){
-            logger.error("Something went with the server ",e);
+        } catch (Exception e) {
+            logger.error("Something went with the server ", e);
             throw new ServerException("Something went wrong with the server ");
 
         }
     }
 
     //helper method to find user
-    private User findUserByUserDetails(UserDetails userDetails)throws NotFoundException {
+    private User findUserByUserDetails(UserDetails userDetails) throws NotFoundException {
 
         Optional<User> userOptional = userRepo.findByUsername(userDetails.getUsername());
 
-        if(userOptional.isEmpty()) throw new NotFoundException("User not found ");
+        if (userOptional.isEmpty()) throw new NotFoundException("User not found ");
         return userOptional.get();
     }
 
-    public List<QuizQuestionsRequest> getAllQuizQuestions(UserDetails userDetails, String quizId)throws NotFoundException {
+    public List<QuizQuestionsRequest> getAllQuizQuestions(UserDetails userDetails, String quizId) throws NotFoundException {
 
         List<QuizQuestionsRequest> quizQuestionsRequests;
-        try{
-            logger.info("Preparing to get all questions {}",QuizService.class);
+        try {
+            logger.info("Preparing to get all questions {}", QuizService.class);
             //checking if user exist by token
             User user = findUserByUserDetails(userDetails);
             // returning questions by quiz
             List<Question> questions = questionRepo.findByQuizId(quizId);
             quizQuestionsRequests = new ArrayList<>();
-            for(Question question: questions){
+            for (Question question : questions) {
 
                 QuizQuestionsRequest quizQuestionsRequest = new QuizQuestionsRequest();
                 quizQuestionsRequest.setQuestionId(question.getQuestionId());
@@ -107,9 +107,9 @@ public class QuizService {
                 quizQuestionsRequest.setOptionC(question.getOptionC());
                 quizQuestionsRequests.add(quizQuestionsRequest);
             }
-        return quizQuestionsRequests;
-        }catch(ServerException serverException){
-            logger.error("Something went wrong with the server ",serverException);
+            return quizQuestionsRequests;
+        } catch (ServerException serverException) {
+            logger.error("Something went wrong with the server ", serverException);
             throw new ServerException("Something went wrong with the server");
         }
 
@@ -121,9 +121,9 @@ public class QuizService {
         User user = findUserByUserDetails(userDetails);
 
         List<Question> questions = questionRepo.findByQuizId(quizId);
-        if(questions.isEmpty()){
+        if (questions.isEmpty()) {
 
-            throw new NotFoundException("No questions for quiz "+ quizId);
+            throw new NotFoundException("No questions for quiz " + quizId);
         }
 
         Map<String, String> answersByQuestionId = submission.getAnswers().stream()
@@ -171,12 +171,12 @@ public class QuizService {
         }
 
         int total = questions.size();
-        int score = (int) Math.round((correct * 100.0)/ total);
+        int score = (int) Math.round((correct * 100.0) / total);
 
         QuizAttempt quizAttempt = new QuizAttempt();
-        Optional<Quiz>  optionalQuiz  = quizRepo.findById(quizId);
-        if(optionalQuiz.isEmpty()){
-            throw new NotFoundException("Quiz not found with id "+ quizId);
+        Optional<Quiz> optionalQuiz = quizRepo.findById(quizId);
+        if (optionalQuiz.isEmpty()) {
+            throw new NotFoundException("Quiz not found with id " + quizId);
         }
         quizAttempt.setQuiz(optionalQuiz.get());
         quizAttempt.setEndTime(LocalDateTime.now());
@@ -184,6 +184,28 @@ public class QuizService {
         quizAttempt.setUser(user);
         quizAttemptRepo.save(quizAttempt);
 
-        return new QuizResultResponse(total,correct,score,details);
+        return new QuizResultResponse(total, correct, score, details);
+    }
+
+    public void delete(String quizId, UserDetails userDetails) {
+        try {
+            User user = findUserByUserDetails(userDetails);
+
+            Optional<Quiz> optionalQuiz = quizRepo.findById(quizId);
+
+            if (optionalQuiz.isEmpty()) {
+                throw new NotFoundException("Quiz is not found ");
+            }
+
+            Quiz quiz = optionalQuiz.get();
+
+            if (!quiz.getAuthor().equals(user)) {
+                throw new NotFoundException("can not delete the quiz");
+            }
+
+            quizRepo.delete(quiz);
+        } catch (ServerException serverException) {
+            throw new ServerException("Something went wrong with the server");
+        }
     }
 }

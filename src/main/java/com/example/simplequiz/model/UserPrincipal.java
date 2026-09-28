@@ -38,4 +38,8 @@ public class UserPrincipal implements UserDetails {
         // You need a field in your User entity to control this.
         return user.isEnabled(); // 👈 This must exist in your 'User' class
     }
+
+    public User getUser() {
+        return user;
+    }
 }

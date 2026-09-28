@@ -1,11 +1,14 @@
 package com.example.simplequiz.controller;
 
 import com.example.simplequiz.dto.LoginRequest;
+import com.example.simplequiz.dto.MeResponse;
 import com.example.simplequiz.dto.SignUpRequest;
 import com.example.simplequiz.dto.VerifyRequest;
 import com.example.simplequiz.exception.AlreadyFoundException;
 import com.example.simplequiz.exception.NotFoundException;
 import com.example.simplequiz.exception.ServerException;
+import com.example.simplequiz.model.User;
+import com.example.simplequiz.model.UserPrincipal;
 import com.example.simplequiz.service.UserService;
 import jakarta.validation.Valid;
 import org.antlr.v4.runtime.InputMismatchException;
@@ -18,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -74,14 +78,16 @@ public class AuthController {
         }
     }
     @GetMapping("/me")
-    public ResponseEntity<?> me(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+    public ResponseEntity<?> me(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        if (userPrincipal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        // Return whatever info the frontend needs about the current user
-        return ResponseEntity.ok(Map.of(
-                "username", authentication.getName(),
-                "authorities", authentication.getAuthorities()
+        User user = userPrincipal.getUser();
+        return ResponseEntity.ok(new MeResponse(
+                user.getUserId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole()
         ));
     }
 

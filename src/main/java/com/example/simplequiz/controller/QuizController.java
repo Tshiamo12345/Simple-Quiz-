@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -29,19 +30,21 @@ public class QuizController {
     public QuizController(QuizService quizService,UserService userService) {
         this.quizService = quizService;
     }
-
+    @PreAuthorize("hasRole('user')")
     @GetMapping
     public ResponseEntity<List<QuizRequest>> getQuizzes(@AuthenticationPrincipal UserDetails userDetails) {
         List<QuizRequest> quizRequestList = quizService.getAllQuizzes(userDetails);
         return ResponseEntity.ok(quizRequestList);
     }
 
+    @PreAuthorize("hasRole('user')")
     @GetMapping("/start/{quizId}")
     public ResponseEntity<List<QuizQuestionsRequest>> getAllQuizQuestions(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String quizId) {
         List<QuizQuestionsRequest> questionList = quizService.getAllQuizQuestions(userDetails, quizId);
         return ResponseEntity.ok(questionList);
     }
 
+    @PreAuthorize("hasRole('user')")
     @PostMapping("/{quizId}/submit")
     public ResponseEntity<QuizResultResponse> submitAnswers(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -51,4 +54,13 @@ public class QuizController {
     return ResponseEntity.ok(quizResultResponse);
 
     }
+    @PreAuthorize("hasRole('admin')")
+    @DeleteMapping("/{quizId}")
+    public ResponseEntity<Void> deleteQuiz(@AuthenticationPrincipal UserDetails userDetails,@PathVariable String quizId){
+
+        quizService.delete(quizId,userDetails);
+        return (ResponseEntity<Void>) ResponseEntity.ok();
+    }
+
+
 }
