@@ -190,20 +190,22 @@ public class QuizService {
 
     public void delete(String quizId, UserDetails userDetails) {
         try {
+            logger.info("checking user");
             User user = findUserByUserDetails(userDetails);
 
+            logger.info("getting the quiz by quidId{} ",quizId);
             Optional<Quiz> optionalQuiz = quizRepo.findById(quizId);
 
+            logger.info("Checking if quiz is not empty");
             if (optionalQuiz.isEmpty()) {
                 throw new NotFoundException("Quiz is not found ");
             }
 
+            logger.info("getting quiz and preparing for deleting function");
             Quiz quiz = optionalQuiz.get();
 
-            if (!quiz.getAuthor().equals(user)) {
-                throw new NotFoundException("can not delete the quiz");
-            }
 
+            logger.info("about to delete the quiz ");
             quizRepo.delete(quiz);
         } catch (ServerException serverException) {
             throw new ServerException("Something went wrong with the server");
