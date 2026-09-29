@@ -9,4 +9,6 @@ public interface QuizAttemptRepo extends JpaRepository<QuizAttempt,String> {
 
     boolean existsByUserUsernameAndQuizId(String username , String quizId);
 
+    long countByQuizId(String quizId);
+
 }

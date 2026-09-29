@@ -1,10 +1,7 @@
 package com.example.simplequiz.controller;
 
 
-import com.example.simplequiz.dto.QuizQuestionsRequest;
-import com.example.simplequiz.dto.QuizRequest;
-import com.example.simplequiz.dto.QuizResultResponse;
-import com.example.simplequiz.dto.SubmitAnswerRequest;
+import com.example.simplequiz.dto.*;
 import com.example.simplequiz.model.Question;
 import com.example.simplequiz.model.User;
 import com.example.simplequiz.service.QuizService;
@@ -54,13 +51,20 @@ public class QuizController {
     return ResponseEntity.ok(quizResultResponse);
 
     }
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{quizId}")
     public ResponseEntity<Void> deleteQuiz(@AuthenticationPrincipal UserDetails userDetails,@PathVariable String quizId){
 
         quizService.delete(quizId,userDetails);
-        return (ResponseEntity<Void>) ResponseEntity.ok();
+        return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/quizzes")
+    public ResponseEntity<List<AdminQuizRequestDTO>> getAllQuizAdmin(@AuthenticationPrincipal UserDetails userDetails){
 
+        List<AdminQuizRequestDTO> adminQuizRequestDTOList = quizService.getAllAdminQuiz(userDetails);
+
+        return ResponseEntity.ok(adminQuizRequestDTOList);
+    }
 }

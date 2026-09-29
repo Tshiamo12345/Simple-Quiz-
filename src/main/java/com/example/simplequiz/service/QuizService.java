@@ -209,4 +209,39 @@ public class QuizService {
             throw new ServerException("Something went wrong with the server");
         }
     }
+
+    @Transactional
+    public List<AdminQuizRequestDTO> getAllAdminQuiz(UserDetails userDetails) throws NotFoundException{
+
+        try{
+            logger.info("Checking the user if exist");
+            User user = findUserByUserDetails(userDetails);
+
+            logger.info("getting all quizzes from database ");
+            List<Quiz> quizzesList = quizRepo.findAll();
+            List<AdminQuizRequestDTO> adminQuizRequestDTOList = new ArrayList<>();
+
+            //iteration
+            for(Quiz quiz : quizzesList){
+
+                long numberOfQuestions = questionRepo.countByQuizId(quiz.getId());
+                long numberOfQuizAttempts = quizAttemptRepo.countByQuizId(quiz.getId());
+
+                AdminQuizRequestDTO adminQuizRequestDTO = new AdminQuizRequestDTO();
+                adminQuizRequestDTO.setQuizName(quiz.getTitle());
+                adminQuizRequestDTO.setId(quiz.getId());
+                adminQuizRequestDTO.setLanguage(quiz.getLanguage());
+                adminQuizRequestDTO.setNumberOfQuestions((int)numberOfQuestions);
+                adminQuizRequestDTO.setNumberOfAttempts((int)numberOfQuizAttempts);
+                adminQuizRequestDTO.setStatus(null);
+                adminQuizRequestDTOList.add(adminQuizRequestDTO);
+            }
+
+            return adminQuizRequestDTOList;
+        }catch(Exception exception){
+            logger.error("Something went wrong with the server ");
+            throw new ServerException("Something went wrong with the server ");
+        }
+
+    }
 }
