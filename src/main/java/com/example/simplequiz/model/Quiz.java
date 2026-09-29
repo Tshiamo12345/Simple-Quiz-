@@ -22,6 +22,10 @@ public class Quiz {
 
     @NotNull
     @NotBlank
+    private String language;
+
+    @NotNull
+    @NotBlank
     private String description;
 
     @ManyToOne
@@ -36,6 +40,14 @@ public class Quiz {
     }
     public void setQuestions(List<Question> questions) {
         this.questions = questions;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public Quiz() {
@@ -79,6 +91,7 @@ public class Quiz {
                 "id='" + id + '\'' +
                 ", title='" + title + '\'' +
                 ", author=" + author +
+                ", language=" +language+
                 '}';
     }
 }

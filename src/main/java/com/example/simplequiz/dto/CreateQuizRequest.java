@@ -6,12 +6,24 @@ public class CreateQuizRequest {
 
     private String description;
 
+    private String language;
+
+
     public CreateQuizRequest() {
     }
 
-    public CreateQuizRequest(String title, String description) {
+    public CreateQuizRequest(String title, String description, String language) {
         this.title = title;
         this.description = description;
+        this.language = language;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public String getTitle() {

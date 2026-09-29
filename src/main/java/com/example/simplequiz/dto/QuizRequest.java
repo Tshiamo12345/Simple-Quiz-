@@ -14,6 +14,8 @@ public class QuizRequest {
 
     private String description;
 
+    private String language;
+
     public String getAuthor() {
         return author;
     }
@@ -37,6 +39,14 @@ public class QuizRequest {
     }
 
     public QuizRequest() {
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public String getTitle() {

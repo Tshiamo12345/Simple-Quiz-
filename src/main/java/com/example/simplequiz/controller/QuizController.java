@@ -30,21 +30,21 @@ public class QuizController {
     public QuizController(QuizService quizService,UserService userService) {
         this.quizService = quizService;
     }
-    @PreAuthorize("hasRole('user')")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping
     public ResponseEntity<List<QuizRequest>> getQuizzes(@AuthenticationPrincipal UserDetails userDetails) {
         List<QuizRequest> quizRequestList = quizService.getAllQuizzes(userDetails);
         return ResponseEntity.ok(quizRequestList);
     }
 
-    @PreAuthorize("hasRole('user')")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/start/{quizId}")
     public ResponseEntity<List<QuizQuestionsRequest>> getAllQuizQuestions(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String quizId) {
         List<QuizQuestionsRequest> questionList = quizService.getAllQuizQuestions(userDetails, quizId);
         return ResponseEntity.ok(questionList);
     }
 
-    @PreAuthorize("hasRole('user')")
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/{quizId}/submit")
     public ResponseEntity<QuizResultResponse> submitAnswers(
             @AuthenticationPrincipal UserDetails userDetails,

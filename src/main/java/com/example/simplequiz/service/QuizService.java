@@ -65,6 +65,7 @@ public class QuizService {
                 quizRequest.setId(quiz.getId());
                 quizRequest.setAuthor(quiz.getAuthor().getUsername());
                 quizRequest.setDescription(quiz.getDescription());
+                quizRequest.setLanguage(quiz.getLanguage());
                 quizRequestList.add(quizRequest);
 
             }
