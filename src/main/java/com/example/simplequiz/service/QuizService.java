@@ -246,4 +246,15 @@ public class QuizService {
         }
 
     }
+
+
+    @Transactional
+    public QuizResponse create(CreateQuizRequestDTO request, UserDetails principal) {
+        User author = userRepo.findByUsername(principal.getUsername())
+                .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+
+        Quiz quiz = QuizMapper.toEntity(request, author);
+        Quiz saved = quizRepo.save(quiz);
+        return QuizMapper.toResponse(saved);
+    }
 }

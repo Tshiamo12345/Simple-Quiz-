@@ -15,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RequestMapping("/api/quiz")
@@ -66,5 +67,16 @@ public class QuizController {
         List<AdminQuizRequestDTO> adminQuizRequestDTOList = quizService.getAllAdminQuiz(userDetails);
 
         return ResponseEntity.ok(adminQuizRequestDTOList);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public ResponseEntity<QuizResponse> createQuiz(
+            @Valid @RequestBody CreateQuizRequestDTO request,
+            @AuthenticationPrincipal UserDetails principal) {
+
+        QuizResponse created = quizService.create(request, principal);
+        URI location = URI.create("/api/quiz/" + created.id());
+        return ResponseEntity.created(location).body(created);
     }
 }
