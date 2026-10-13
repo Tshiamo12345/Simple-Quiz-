@@ -4,14 +4,15 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,80 +21,81 @@ import java.util.function.Function;
 @Service
 public class JWTService {
 
-    private String secretKey = "";
+    private static final Logger logger = LoggerFactory.getLogger(JWTService.class);
 
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-    public JWTService(){
+    @Value("${jwt.expiration-ms}")
+    private long expirationMs;
 
-        try{
-            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-            SecretKey sk = keyGen.generateKey();
-            secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
-        }catch(NoSuchAlgorithmException e){
-            throw new RuntimeException(e);
+    private SecretKey signingKey;
 
+    @PostConstruct
+    void init() {
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(secretKey);
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "jwt.secret is not valid Base64. Generate one with: openssl rand -base64 32", e);
         }
-
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                    "jwt.secret must decode to at least 32 bytes for HS256. Got: " + keyBytes.length);
+        }
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+        logger.info("JWTService initialized with a stable secret ({} bytes, {} ms expiry)",
+                keyBytes.length, expirationMs);
     }
 
-
-    public String generateToken(String username){
-        Map<String,Object> claims = new HashMap<>();
+    public String generateToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
         return Jwts.builder()
-                .claims()
-                .add(claims)
+                .claims(claims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .and()
-                .signWith(getKey())
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
+                .signWith(signingKey)
                 .compact();
     }
-    private SecretKey getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
 
     public String extractUserName(String token) {
-
-        return extractClaim(token, Claims:: getSubject);
+        return extractClaim(token, Claims::getSubject);
     }
-    private <T> T extractClaim(String token , Function<Claims,T> claimResolver){
 
+    private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
         final Claims claims = extractAllClaims(token);
         return claimResolver.apply(claims);
     }
 
-
-    private Claims extractAllClaims (String token){
-        return Jwts.parser().verifyWith(getKey())
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-
     }
 
     public boolean validateToken(String token, @NotNull UserDetails userDetails) {
         final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername())&& !isTokenExpired(token));
-
+        return userName.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().verifyWith(getKey()).build().parseSignedClaims(token);
+            Jwts.parser().verifyWith(signingKey).build().parseSignedClaims(token);
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
-    private boolean isTokenExpired(String token ){
+    private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    private Date extractExpiration(String token){
+    private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 }

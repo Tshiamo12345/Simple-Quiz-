@@ -23,6 +23,7 @@ public class User {
 
     private LocalDateTime createdAt;
 
+    private String name;
 
     @NotBlank(message="email can not blank ")
     @NotNull(message = "email can not be null ")
@@ -121,6 +122,14 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override

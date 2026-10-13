@@ -3,6 +3,7 @@ package com.example.simplequiz.service;
 
 import com.example.simplequiz.dto.LoginRequest;
 import com.example.simplequiz.dto.SignUpRequest;
+import com.example.simplequiz.dto.UserResponse;
 import com.example.simplequiz.exception.AlreadyFoundException;
 import com.example.simplequiz.exception.NotFoundException;
 import com.example.simplequiz.exception.ServerException;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -175,6 +177,19 @@ public class UserService implements UserDetailsService {
 
         return new UserPrincipal(userOptional.get());
     }
+
+    public List<UserResponse> getAllUsers() {
+        logger.info("Fetching all users");
+        try {
+            return userRepo.findAll()
+                    .stream()
+                    .map(this::toUserResponse)
+                    .toList();
+        } catch (Exception e) {
+            logger.error("Failed to fetch users", e);
+            throw new ServerException("Could not fetch users");
+        }
+    }
     private void sendEmail(String emailToSendTo, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(emailToSendTo);
@@ -184,4 +199,13 @@ public class UserService implements UserDetailsService {
 
     }
 
+    private UserResponse toUserResponse(User user) {
+        return new UserResponse(
+                user.getUserId(),
+                user.getName(),// String id (adjust if Long -> String.valueOf(user.getId()))// fallback if no name field
+                user.getUsername(),
+                user.getEmail(),
+                user.getCreatedAt() != null ? user.getCreatedAt().toLocalDate() : null
+        );
+    }
 }
